@@ -1,7 +1,24 @@
+import { appConfig } from './config/app.config';
+
+import { initPostgres } from './database/database';
+
 import express from 'express';
 
-const app = express();
+(async function main() {
+	const postgresClient = await initPostgres();
 
-app.listen(3000, () => {
-	console.log('Server is running on port 3000');
-});
+	const app = express();
+
+	const { host, port, nodeEnv } = appConfig;
+
+	app.listen(port, host, () => {
+		if (nodeEnv !== 'production') {
+			console.table({
+				host,
+				port,
+				nodeEnv,
+				pid: process.pid,
+			});
+		}
+	});
+})();
