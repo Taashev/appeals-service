@@ -4,12 +4,16 @@ import { initPostgres } from './database/database';
 
 import express from 'express';
 
+import { rootRouter } from './routers';
+
 (async function main() {
-	const postgresClient = await initPostgres();
+	await initPostgres();
+
+	const { host, port, nodeEnv } = appConfig;
 
 	const app = express();
 
-	const { host, port, nodeEnv } = appConfig;
+	app.use(rootRouter);
 
 	app.listen(port, host, () => {
 		if (nodeEnv !== 'production') {
