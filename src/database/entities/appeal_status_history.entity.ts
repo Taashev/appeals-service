@@ -8,12 +8,13 @@ import {
 	Unique,
 } from 'typeorm';
 import { AppealEntity } from './appeal.entity';
+import { AppealStatusEntity } from './appeal-status.entity';
 
 @Entity({ name: 'appeal_status_history' })
 @Unique('UQ_appeal_status_timestamp', ['created_at', 'appeal_id', 'status_id'])
 export class AppealStatusHistoryEntity {
-	@PrimaryGeneratedColumn()
-	id!: number;
+	@PrimaryGeneratedColumn('uuid')
+	id!: string;
 
 	@CreateDateColumn()
 	created_at!: Date;
@@ -23,9 +24,9 @@ export class AppealStatusHistoryEntity {
 
 	@ManyToOne(() => AppealEntity, { nullable: false, onDelete: 'CASCADE' })
 	@JoinColumn({ name: 'appeal_id' })
-	appeal_id!: string;
+	appeal_id!: AppealEntity;
 
-	@ManyToOne(() => AppealStatusHistoryEntity, { nullable: false })
+	@ManyToOne(() => AppealStatusEntity, { nullable: false })
 	@JoinColumn({ name: 'status_id' })
-	status_id!: number;
+	status_id!: AppealStatusEntity;
 }
