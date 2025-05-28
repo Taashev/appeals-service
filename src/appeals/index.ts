@@ -1,14 +1,20 @@
 import { AppDataSource } from '../../ormconfig';
 
 import { AppealsController } from './appeals.controller';
-import { AppealsService } from './appels.service';
+import { AppealsService } from './appeals.service';
 import { AppealsRepository } from './appeals.repository';
 import { AppealsRouterV1 } from './appeals.router.v1';
-import { AppealEntity } from '../database/entities/appeal.entity';
+import { AppealEntity } from './entities/appeal.entity';
+
+import { appealStatusService } from '../appeal-status';
+import { validateDto } from '../middlewares/validate.dto';
 
 const appealRepository = new AppealsRepository(
 	AppDataSource.getRepository(AppealEntity),
 );
-const appealService = new AppealsService(appealRepository);
+const appealService = new AppealsService(appealRepository, appealStatusService);
 const appealsController = new AppealsController(appealService);
-export const appealsRouterV1 = new AppealsRouterV1(appealsController).getRouter;
+const appealsRouterV1 = new AppealsRouterV1(appealsController, validateDto)
+	.getRouter;
+
+export { appealsRouterV1 };
