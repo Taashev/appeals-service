@@ -2,13 +2,12 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
-	Generated,
 	JoinColumn,
 	ManyToOne,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from 'typeorm';
-import { AppealStatusEntity } from './appeal-status.entity';
+import { AppealStatusEntity } from '../../appeal-status/entities/appeal-status.entity';
 
 @Entity({ name: 'appeals' })
 export class AppealEntity {
@@ -20,10 +19,6 @@ export class AppealEntity {
 
 	@UpdateDateColumn()
 	updated_at!: Date;
-
-	@Column({ type: 'int', unique: true, nullable: false })
-	@Generated('increment')
-	track_number!: number;
 
 	@Column({ type: 'varchar', length: 255, nullable: false })
 	theme!: string;

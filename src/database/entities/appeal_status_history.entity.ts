@@ -7,8 +7,8 @@ import {
 	PrimaryGeneratedColumn,
 	Unique,
 } from 'typeorm';
-import { AppealEntity } from './appeal.entity';
-import { AppealStatusEntity } from './appeal-status.entity';
+import { AppealEntity } from '../../appeals/entities/appeal.entity';
+import { AppealStatusEntity } from '../../appeal-status/entities/appeal-status.entity';
 
 @Entity({ name: 'appeal_status_history' })
 @Unique('UQ_appeal_status_timestamp', ['created_at', 'appeal_id', 'status_id'])

@@ -13,6 +13,8 @@ import { rootRouter } from './routers';
 
 	const app = express();
 
+	app.use(express.json());
+
 	app.use(rootRouter);
 
 	app.listen(port, host, () => {
