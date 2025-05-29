@@ -5,6 +5,7 @@ import { initPostgres } from './database/database';
 import express from 'express';
 
 import { rootRouter } from './routers';
+import { handleErrors } from './middlewares/handle-errors';
 
 (async function main() {
 	await initPostgres();
@@ -16,6 +17,8 @@ import { rootRouter } from './routers';
 	app.use(express.json());
 
 	app.use(rootRouter);
+
+  app.use(handleErrors);
 
 	app.listen(port, host, () => {
 		if (nodeEnv !== 'production') {

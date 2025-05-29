@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { appSchema } from './schema/app.schema';
 import { AppConfig } from './types/app.config.types';
 
-import { validationZodSchemaOrFail } from '../utils/validation-schema';
+import { validationZodSchemaOrFail } from '../utils/validation.schema';
 
 const envPath = ['env.development', 'env.testing', 'env.production', '.env'];
 

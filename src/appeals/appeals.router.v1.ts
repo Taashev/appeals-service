@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { AppealsController } from './appeals.controller';
 import { CreateAppealDto } from './dto/create-appeal.dto';
 
-import { ValidateDto } from '../middlewares/validate.dto';
+import { ValidateDtoMiddleware } from '../middlewares/validate.dto';
 
 export class AppealsRouterV1 {
 	private router: Router = Router();
@@ -11,7 +11,7 @@ export class AppealsRouterV1 {
 
 	constructor(
 		private appealsController: AppealsController,
-		private validateDto: ValidateDto,
+		private validateDto: ValidateDtoMiddleware,
 	) {
 		this.init();
 	}
@@ -20,12 +20,24 @@ export class AppealsRouterV1 {
 		return this.prefix + path;
 	}
 
+	createAppeal() {
+		const path = this.buildPath();
+		const validateDto = this.validateDto.validate(CreateAppealDto);
+		const handlerCreateAppeal = this.appealsController.createAppeal;
+
+		this.router.post(path, validateDto, handlerCreateAppeal);
+	}
+
+	takeToWork() {
+		const path = this.buildPath('/:id/status/take');
+    const handlerTakeToWork = this.appealsController.takeToWork;
+
+    this.router.post(path, handlerTakeToWork);
+	}
+
 	private init() {
-		this.router.post(
-			this.buildPath(),
-			this.validateDto.validate(CreateAppealDto),
-			this.appealsController.createAppeal,
-		);
+		this.createAppeal();
+    this.takeToWork();
 	}
 
 	get getRouter() {

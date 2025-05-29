@@ -4,7 +4,11 @@ import { AppealStatusEntity } from './entities/appeal-status.entity';
 export class AppealStatusRepository {
 	constructor(private appealStatusRepository: Repository<AppealStatusEntity>) {}
 
-  async getStatusWithValueNew() {
-    return await this.appealStatusRepository.findOneBy({ value: 'Новое'})
-  }
+	async getNewStatus() {
+		return await this.appealStatusRepository.findOneBy({ value: 'Новое' });
+	}
+
+	async getWorkStatus() {
+		return await this.appealStatusRepository.findOneBy({ value: 'В работе' });
+	}
 }
