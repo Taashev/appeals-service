@@ -1,15 +1,26 @@
-import { AppealStatusRepository } from "./appeal-status.repository";
+import { StatusNotConfiguredError } from '../errors/status-not-configured.error';
+import { AppealStatusRepository } from './appeal-status.repository';
 
 export class AppealStatusService {
-  constructor(private appealStatusRepository: AppealStatusRepository) {}
+	constructor(private appealStatusRepository: AppealStatusRepository) {}
 
-  async getDefaultStatusOrFail () {
-    const defaultStatus = await this.appealStatusRepository.getStatusWithValueNew();
+	async getStatusNewOrFail() {
+		const defaultStatus = await this.appealStatusRepository.getNewStatus();
 
-    if (!defaultStatus) {
-      throw new Error('Статус "Новое" не найден');
-    }
+		if (!defaultStatus) {
+			throw new StatusNotConfiguredError('Новое');
+		}
 
-    return defaultStatus;
-  }
+		return defaultStatus;
+	}
+
+	async getStatusWorkOrFail() {
+		const workStatus = await this.appealStatusRepository.getWorkStatus();
+
+		if (!workStatus) {
+			throw new StatusNotConfiguredError('В работе');
+		}
+
+		return workStatus;
+	}
 }

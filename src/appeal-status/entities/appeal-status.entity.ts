@@ -1,4 +1,9 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+	Column,
+	Entity,
+	OneToMany,
+	PrimaryGeneratedColumn,
+} from 'typeorm';
 import { AppealEntity } from '../../appeals/entities/appeal.entity';
 
 @Entity({ name: 'appeal_status' })

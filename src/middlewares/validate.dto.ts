@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { ClassTransformer } from 'class-transformer';
 import { validate } from 'class-validator';
+import { BadRequestError } from '../errors/bad-request.error';
 
-export class ValidateDto {
+export class ValidateDtoMiddleware {
 	validate<T extends new (...args: []) => object>(DtoClass: T) {
 		return async (req: Request, res: Response, next: NextFunction) => {
 			const transformed = new ClassTransformer().plainToInstance(
@@ -16,14 +17,12 @@ export class ValidateDto {
 			const errors = await validate(transformed);
 
 			if (errors.length) {
-				res.status(400).json({
-					message: 'Validation failed',
-					errors: errors.map((e) => ({
-						property: e.property,
-						constraints: e.constraints,
-					})),
-				});
-				return;
+				const details = errors.map((e) => ({
+					property: e.property,
+					constraints: e.constraints,
+				}));
+
+				throw new BadRequestError('Некорректные данные в запросе', details);
 			}
 
 			req.body = transformed;
@@ -33,4 +32,4 @@ export class ValidateDto {
 	}
 }
 
-export const validateDto = new ValidateDto();
+export const validateDtoMiddleware = new ValidateDtoMiddleware();
