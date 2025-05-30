@@ -54,4 +54,21 @@ export class AppealsController {
 			next(error);
 		}
 	};
+
+	cancelAppeal = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const appealId = req.params.id;
+			const comment = req.body.comment;
+
+			const responseAppealDto = await this.appealsService.updateStatus(
+				appealId,
+				APPEAL_STATUSES.CANCEL,
+				comment,
+			);
+
+			res.send(responseAppealDto);
+		} catch (error) {
+			next(error);
+		}
+	};
 }

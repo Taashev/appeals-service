@@ -42,10 +42,18 @@ export class AppealsRouterV1 {
 		this.router.post(path, handlerEndEppeal);
 	}
 
+	cancelAppeal() {
+		const path = this.buildPath('/:id/status/cancel');
+		const handlerCancelAppeal = this.appealsController.cancelAppeal;
+
+		this.router.post(path, handlerCancelAppeal);
+	}
+
 	private init() {
 		this.createAppeal();
 		this.takeToWork();
 		this.endAppeal();
+    this.cancelAppeal();
 	}
 
 	get getRouter() {

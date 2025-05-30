@@ -57,10 +57,14 @@ export class AppealStatusService {
 		currentStatus: APPEAL_STATUSES,
 		newStatus: APPEAL_STATUSES,
 	) {
+		// получаем массив статусов, в которые можно перейти из текущего
 		const allowedStatuses = allowedTransitionStatuses[currentStatus];
+		// проверяем, что новый статус находится в массиве разрешенных статусов
 		const isAllowed = allowedStatuses.includes(newStatus);
 
+		// если новый статус не разрешен, выбрасываем ошибку
 		if (!isAllowed) {
+			// проверяем, есть ли у текущего статуса специфическое сообщение об ошибке
 			const specificError =
 				statusTransitionErrorMessages[currentStatus]?.[newStatus];
 
