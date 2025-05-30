@@ -1,6 +1,6 @@
 import { Expose, Transform } from "class-transformer";
 
-export class ResponseUpdateStatusAppealDto {
+export class ResponseUpdateAppealStatusDto {
 	@Expose()
 	id!: string;
 

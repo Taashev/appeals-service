@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 
 import { AppealsService } from './appeals.service';
 import { CreateAppealDto } from './dto/create-appeal.dto';
+import { APPEAL_STATUSES } from '../appeal-status/enums/statuses';
 
 export class AppealsController {
 	constructor(private appealsService: AppealsService) {}
@@ -20,13 +21,31 @@ export class AppealsController {
 		}
 	};
 
-	takeToWork = async (req: Request, res: Response, next: NextFunction) => {
+	inWork = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const appealId = req.params.id;
 			const comment = req.body.comment;
 
-			const responseAppealDto = await this.appealsService.takeToWork(
+			const responseAppealDto = await this.appealsService.updateStatus(
 				appealId,
+				APPEAL_STATUSES.IN_WORK,
+				comment,
+			);
+
+			res.send(responseAppealDto);
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	endAppeal = async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const appealId = req.params.id;
+			const comment = req.body.comment;
+
+			const responseAppealDto = await this.appealsService.updateStatus(
+				appealId,
+				APPEAL_STATUSES.COMPLETED,
 				comment,
 			);
 
