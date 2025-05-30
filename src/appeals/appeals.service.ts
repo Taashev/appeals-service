@@ -6,7 +6,8 @@ import { NotFoundError } from '../errors/not-found.error';
 import { AppealsRepository } from './appeals.repository';
 import { CreateAppealDto } from './dto/create-appeal.dto';
 import { ResponseCreateAppealDto } from './dto/response-create-appeal.dto';
-import { ResponseUpdateStatusAppealDto } from './dto/response-update-status-appeal.dto';
+import { ResponseUpdateAppealStatusDto } from './dto/response-update-status-appeal.dto';
+import { APPEAL_STATUSES } from '../appeal-status/enums/statuses';
 
 export class AppealsService {
 	constructor(
@@ -42,7 +43,11 @@ export class AppealsService {
 		return responseAppealDto;
 	}
 
-	async takeToWork(appealId: string, comment?: string) {
+	async updateStatus(
+		appealId: string,
+		newStatusValue: APPEAL_STATUSES,
+		comment?: string,
+	) {
 		// получаем заявку по id
 		const appeal = await this.appealsRepository.getById(appealId);
 
@@ -50,31 +55,42 @@ export class AppealsService {
 			throw new NotFoundError('Заявка не найдена');
 		}
 
-		// получаем статус "в работе"
-		const workStatus = await this.appealStatusService.getStatusWorkOrFail();
+    // получаем текущий статус
+		const currentStatus = appeal.status.value;
+
+    // валидируем переходы статусов заявки
+		this.appealStatusService.validateTransitionStatusesOrFail(
+			currentStatus,
+			newStatusValue,
+		);
+
+		// получаем статус
+		const status = await this.appealStatusService.getStatusByValueOrFail(
+			newStatusValue,
+		);
 
 		// обновляем статус заявки
-		await this.appealsRepository.updateStatus(appealId, workStatus);
+		await this.appealsRepository.updateStatus(appealId, status);
 
 		// записываем заявку в историю
 		const latestHistory =
 			await this.appealStatusHistoryService.createAppealStatusHistory(
 				appeal,
-				workStatus,
+				status,
 				comment,
 			);
 
 		// получаем обновленную заявку
 		const updatedAppeal = await this.appealsRepository.getById(appealId);
 
-    // преобразуем в DTO
+		// преобразуем в DTO
 		const responseAppealDto = plainToInstance(
-			ResponseUpdateStatusAppealDto,
+			ResponseUpdateAppealStatusDto,
 			updatedAppeal,
 			{ excludeExtraneousValues: true },
 		);
 
-    // добавляем комментарий к заявке
+		// добавляем комментарий к заявке
 		responseAppealDto.comment = latestHistory.comment ?? '';
 
 		return responseAppealDto;
