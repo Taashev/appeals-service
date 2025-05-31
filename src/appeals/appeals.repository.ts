@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { AppealEntity } from './entities/appeal.entity';
 import { CreateAppealDto } from './dto/create-appeal.dto';
@@ -16,8 +16,8 @@ export class AppealsRepository {
 		return await this.appealsRepository.save(createAppealDto);
 	}
 
-	async updateStatus(id: string, newStatus: AppealStatusEntity) {
-		return await this.appealsRepository.update(id, { status: newStatus });
+	async updateStatuses(ids: string[], newStatus: AppealStatusEntity) {
+		return await this.appealsRepository.update(ids, { status: newStatus });
 	}
 
 	async getById(id: string) {
@@ -30,6 +30,20 @@ export class AppealsRepository {
 	async getAll() {
 		return await this.appealsRepository.find({
 			relations: { status: true },
+		});
+	}
+
+	async getAllByIds(ids: string[]) {
+		return await this.appealsRepository.find({
+			where: { id: In(ids) },
+			relations: { status: true },
+		});
+	}
+
+	async getAllByStatusId(statusId: number) {
+		return await this.appealsRepository.find({
+			relations: { status: true },
+			where: { status: { id: statusId } },
 		});
 	}
 

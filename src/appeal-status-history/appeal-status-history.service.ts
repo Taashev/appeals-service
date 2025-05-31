@@ -7,23 +7,44 @@ export class AppealStatusHistoryService {
 		private appealStatusHistoryRepository: AppealStatusHistoryRepository,
 	) {}
 
-	async createAppealStatusHistory(
+	async saveOneAppealStatusHistory(
 		appealEntity: AppealEntity,
 		appealStatusEntity: AppealStatusEntity,
 		comment?: string,
 	) {
-		const buildItemHistory = this.appealStatusHistoryRepository.create(
+		const buildItemHistory = this.appealStatusHistoryRepository.createOne(
 			appealEntity,
 			appealStatusEntity,
 		);
 
 		buildItemHistory.comment ??= comment;
 
-		const createdItemHistory = await this.appealStatusHistoryRepository.save(
+		const createdItemHistory = await this.appealStatusHistoryRepository.saveOne(
 			buildItemHistory,
 		);
 
 		return createdItemHistory;
+	}
+
+	async saveManyAppealStatusHistory(
+		appealEntities: AppealEntity[],
+		appealStatusEntity: AppealStatusEntity,
+		comment?: string,
+	) {
+		const createdItemsHistory = this.appealStatusHistoryRepository.createMany(
+			appealEntities,
+			appealStatusEntity,
+		);
+
+		for (const item of createdItemsHistory) {
+			item.comment ??= comment;
+		}
+
+		const savedItemsHistory = await this.appealStatusHistoryRepository.saveMany(
+			createdItemsHistory,
+		);
+
+		return savedItemsHistory;
 	}
 
 	async getLatestHistory(appealId: string) {
