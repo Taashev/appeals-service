@@ -5,9 +5,10 @@ import { AppealStatusService } from '../appeal-status/appeal-status.service';
 import { NotFoundError } from '../errors/not-found.error';
 import { AppealsRepository } from './appeals.repository';
 import { CreateAppealDto } from './dto/create-appeal.dto';
-import { ResponseCreateAppealDto } from './dto/response-create-appeal.dto';
-import { ResponseUpdateAppealStatusDto } from './dto/response-update-status-appeal.dto';
+import { ResponseAppealDto } from './dto/response-appeal.dto';
 import { APPEAL_STATUSES } from '../appeal-status/enums/statuses';
+import { AppealEntity } from './entities/appeal.entity';
+import { DateFilter } from './types/types';
 
 export class AppealsService {
 	constructor(
@@ -15,6 +16,32 @@ export class AppealsService {
 		private appealStatusService: AppealStatusService,
 		private appealStatusHistoryService: AppealStatusHistoryService,
 	) {}
+
+	async getAllWithDateFilter(dateFilter: DateFilter) {
+		let appeals: AppealEntity[] = [];
+
+		if (dateFilter.range) {
+			appeals = await this.appealsRepository.getAllWithDateRangeFilter(
+				dateFilter.range,
+			);
+		} else if (dateFilter.date) {
+			appeals = await this.appealsRepository.getAllWithDateFilter(
+				dateFilter.date,
+			);
+		} else {
+			appeals = await this.appealsRepository.getAll();
+		}
+
+		// добавляем историю последнего статуса в заявки
+		await this.mapAppealLastHistory(appeals);
+
+		// преобразуем в DTO
+		const responseAppealsDto = plainToInstance(ResponseAppealDto, appeals, {
+			excludeExtraneousValues: true,
+		});
+
+		return responseAppealsDto;
+	}
 
 	async createAppeal(createAppealDto: CreateAppealDto) {
 		// создаем обьект заявки
@@ -34,8 +61,12 @@ export class AppealsService {
 			defaultStatus,
 		);
 
+		// добавляем историю последнего статуса в заявку
+		await this.mapAppealLastHistory([createdAppeal]);
+
+		// преобразуем в DTO
 		const responseAppealDto = plainToInstance(
-			ResponseCreateAppealDto,
+			ResponseAppealDto,
 			createdAppeal,
 			{ excludeExtraneousValues: true },
 		);
@@ -55,10 +86,10 @@ export class AppealsService {
 			throw new NotFoundError('Заявка не найдена');
 		}
 
-    // получаем текущий статус
+		// получаем текущий статус
 		const currentStatus = appeal.status.value;
 
-    // валидируем переходы статусов заявки
+		// валидируем переходы статусов заявки
 		this.appealStatusService.validateTransitionStatusesOrFail(
 			currentStatus,
 			newStatusValue,
@@ -83,9 +114,12 @@ export class AppealsService {
 		// получаем обновленную заявку
 		const updatedAppeal = await this.appealsRepository.getById(appealId);
 
+		// добавляем историю последнего статуса в заявку
+		await this.mapAppealLastHistory([updatedAppeal!]);
+
 		// преобразуем в DTO
 		const responseAppealDto = plainToInstance(
-			ResponseUpdateAppealStatusDto,
+			ResponseAppealDto,
 			updatedAppeal,
 			{ excludeExtraneousValues: true },
 		);
@@ -94,5 +128,14 @@ export class AppealsService {
 		responseAppealDto.comment = latestHistory.comment ?? '';
 
 		return responseAppealDto;
+	}
+
+	async mapAppealLastHistory(appeals: AppealEntity[]) {
+		for (const appeal of appeals) {
+			const lastHistory =
+				await this.appealStatusHistoryService.getLatestHistory(appeal.id);
+
+			appeal.lastStatusHistory = lastHistory;
+		}
 	}
 }

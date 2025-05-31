@@ -1,6 +1,6 @@
-import { Expose, Transform } from "class-transformer";
+import { Expose, Transform } from 'class-transformer';
 
-export class ResponseUpdateAppealStatusDto {
+export class ResponseAppealDto {
 	@Expose()
 	id!: string;
 
@@ -20,6 +20,9 @@ export class ResponseUpdateAppealStatusDto {
 	@Transform(({ obj }) => obj.status.value)
 	status!: string;
 
-  @Expose()
-  comment!: string;
+	@Expose()
+	@Transform(({ obj }) => {
+		return obj.lastStatusHistory?.comment || null;
+	})
+	comment!: string;
 }
