@@ -25,4 +25,10 @@ export class AppealStatusHistoryService {
 
 		return createdItemHistory;
 	}
+
+	async getLatestHistory(appealId: string) {
+		return await this.appealStatusHistoryRepository.getLastHistoryByAppealId(
+			appealId,
+		);
+	}
 }

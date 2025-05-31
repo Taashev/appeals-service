@@ -8,6 +8,7 @@ import {
 	UpdateDateColumn,
 } from 'typeorm';
 import { AppealStatusEntity } from '../../appeal-status/entities/appeal-status.entity';
+import { AppealStatusHistoryEntity } from '../../appeal-status-history/entities/appeal_status_history.entity';
 
 @Entity({ name: 'appeals' })
 export class AppealEntity {
@@ -31,4 +32,6 @@ export class AppealEntity {
 	})
 	@JoinColumn({ name: 'status_id' })
 	status!: AppealStatusEntity;
+
+	lastStatusHistory!: AppealStatusHistoryEntity | null;
 }

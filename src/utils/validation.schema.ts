@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
 export const validationZodSchemaOrFail = <T>(
-	config: Record<string, any>,
+	obj: Record<string, any>,
 	schema: z.ZodObject<any>,
 ) => {
-	let configParsed: T;
+	let resultParsed: T;
 
 	try {
-		configParsed = schema.parse(config) as T;
+		resultParsed = schema.parse(obj) as T;
 	} catch (error) {
 		if (error instanceof z.ZodError) {
 			const validationErrors = error.errors
@@ -22,5 +22,5 @@ export const validationZodSchemaOrFail = <T>(
 		}
 	}
 
-	return configParsed;
+	return resultParsed;
 };

@@ -1,9 +1,10 @@
-import { NextFunction, Request, Response, Router } from 'express';
+import { Router } from 'express';
 
 import { AppealsController } from './appeals.controller';
 import { CreateAppealDto } from './dto/create-appeal.dto';
 
 import { ValidateDtoMiddleware } from '../middlewares/validate.dto';
+import { validationQueryParamsDateFilter } from './validate/validate-query-date-filter';
 
 export class AppealsRouterV1 {
 	private router: Router = Router();
@@ -20,12 +21,24 @@ export class AppealsRouterV1 {
 		return this.prefix + path;
 	}
 
+	getAllAppealsWithDateFilter() {
+		const path = this.buildPath();
+		const handlerGetAllAppealsWithDateFilter =
+			this.appealsController.getAllAppealsWithDateFilter;
+
+		this.router.get(
+			path,
+			validationQueryParamsDateFilter,
+			handlerGetAllAppealsWithDateFilter,
+		);
+	}
+
 	createAppeal() {
 		const path = this.buildPath();
-		const validateDto = this.validateDto.validate(CreateAppealDto);
+		const validateBodyDto = this.validateDto.validateBody(CreateAppealDto);
 		const handlerCreateAppeal = this.appealsController.createAppeal;
 
-		this.router.post(path, validateDto, handlerCreateAppeal);
+		this.router.post(path, validateBodyDto, handlerCreateAppeal);
 	}
 
 	takeToWork() {
@@ -50,10 +63,11 @@ export class AppealsRouterV1 {
 	}
 
 	private init() {
+		this.getAllAppealsWithDateFilter();
 		this.createAppeal();
 		this.takeToWork();
 		this.endAppeal();
-    this.cancelAppeal();
+		this.cancelAppeal();
 	}
 
 	get getRouter() {

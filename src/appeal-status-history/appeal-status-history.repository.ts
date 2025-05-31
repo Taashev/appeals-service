@@ -16,7 +16,22 @@ export class AppealStatusHistoryRepository {
 		});
 	}
 
-	save(appealStatusHistoryEntity: AppealStatusHistoryEntity) {
-		return this.appealStatusHistoryRepository.save(appealStatusHistoryEntity);
+	async save(appealStatusHistoryEntity: AppealStatusHistoryEntity) {
+		return await this.appealStatusHistoryRepository.save(
+			appealStatusHistoryEntity,
+		);
+	}
+
+	async getLastHistoryByAppealId(appealId: string) {
+		return await this.appealStatusHistoryRepository.findOne({
+			where: {
+				appeal: {
+					id: appealId,
+				},
+			},
+			order: {
+				created_at: 'DESC',
+			},
+		});
 	}
 }
