@@ -9,16 +9,37 @@ export class AppealStatusHistoryRepository {
 		private appealStatusHistoryRepository: Repository<AppealStatusHistoryEntity>,
 	) {}
 
-	create(appealEntity: AppealEntity, appealStatusEntity: AppealStatusEntity) {
+	createOne(
+		appealEntity: AppealEntity,
+		appealStatusEntity: AppealStatusEntity,
+	) {
 		return this.appealStatusHistoryRepository.create({
 			appeal: appealEntity,
 			status: appealStatusEntity,
 		});
 	}
 
-	async save(appealStatusHistoryEntity: AppealStatusHistoryEntity) {
+	createMany(
+		appealEntities: AppealEntity[],
+		appealStatusEntity: AppealStatusEntity,
+	) {
+		return this.appealStatusHistoryRepository.create(
+			appealEntities.map((appealEntity) => ({
+				appeal: appealEntity,
+				status: appealStatusEntity,
+			})),
+		);
+	}
+
+	async saveOne(appealStatusHistoryEntity: AppealStatusHistoryEntity) {
 		return await this.appealStatusHistoryRepository.save(
 			appealStatusHistoryEntity,
+		);
+	}
+
+	async saveMany(appealStatusHistoryEntities: AppealStatusHistoryEntity[]) {
+		return await this.appealStatusHistoryRepository.save(
+			appealStatusHistoryEntities,
 		);
 	}
 

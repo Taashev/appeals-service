@@ -33,7 +33,7 @@ export class AppealsService {
 		}
 
 		// добавляем историю последнего статуса в заявки
-		await this.mapAppealLastHistory(appeals);
+		await this.mapAppealStatusLastHistory(appeals);
 
 		// преобразуем в DTO
 		const responseAppealsDto = plainToInstance(ResponseAppealDto, appeals, {
@@ -48,7 +48,9 @@ export class AppealsService {
 		const buildAppeal = this.appealsRepository.create(createAppealDto);
 
 		// получем статус заявкм "новое"
-		const defaultStatus = await this.appealStatusService.getStatusNewOrFail();
+		const defaultStatus = await this.appealStatusService.getStatusByValueOrFail(
+			APPEAL_STATUSES.NEW,
+		);
 
 		buildAppeal.status = defaultStatus;
 
@@ -56,13 +58,13 @@ export class AppealsService {
 		const createdAppeal = await this.appealsRepository.save(buildAppeal);
 
 		// записываем заявку в историю
-		await this.appealStatusHistoryService.createAppealStatusHistory(
+		await this.appealStatusHistoryService.saveOneAppealStatusHistory(
 			createdAppeal,
 			defaultStatus,
 		);
 
 		// добавляем историю последнего статуса в заявку
-		await this.mapAppealLastHistory([createdAppeal]);
+		await this.mapAppealStatusLastHistory([createdAppeal]);
 
 		// преобразуем в DTO
 		const responseAppealDto = plainToInstance(
@@ -74,7 +76,7 @@ export class AppealsService {
 		return responseAppealDto;
 	}
 
-	async updateStatus(
+	async updateStatusById(
 		appealId: string,
 		newStatusValue: APPEAL_STATUSES,
 		comment?: string,
@@ -86,7 +88,7 @@ export class AppealsService {
 			throw new NotFoundError('Заявка не найдена');
 		}
 
-		// получаем текущий статус
+		// получаем текущий статус обращения
 		const currentStatus = appeal.status.value;
 
 		// валидируем переходы статусов заявки
@@ -95,27 +97,27 @@ export class AppealsService {
 			newStatusValue,
 		);
 
-		// получаем статус
-		const status = await this.appealStatusService.getStatusByValueOrFail(
+		// получаем новый статус
+		const newStatus = await this.appealStatusService.getStatusByValueOrFail(
 			newStatusValue,
 		);
 
 		// обновляем статус заявки
-		await this.appealsRepository.updateStatus(appealId, status);
+		await this.appealsRepository.updateStatuses([appeal.id], newStatus);
 
 		// записываем заявку в историю
 		const latestHistory =
-			await this.appealStatusHistoryService.createAppealStatusHistory(
+			await this.appealStatusHistoryService.saveOneAppealStatusHistory(
 				appeal,
-				status,
+				newStatus,
 				comment,
 			);
 
 		// получаем обновленную заявку
 		const updatedAppeal = await this.appealsRepository.getById(appealId);
 
-		// добавляем историю последнего статуса в заявку
-		await this.mapAppealLastHistory([updatedAppeal!]);
+		// добавляем состояние последнего статуса с комментарием к заявке
+		await this.mapAppealStatusLastHistory([updatedAppeal!]);
 
 		// преобразуем в DTO
 		const responseAppealDto = plainToInstance(
@@ -130,7 +132,62 @@ export class AppealsService {
 		return responseAppealDto;
 	}
 
-	async mapAppealLastHistory(appeals: AppealEntity[]) {
+	async updateStatusByStatus(
+		fromStatus: APPEAL_STATUSES,
+		toStatus: APPEAL_STATUSES,
+		comment?: string,
+	) {
+		// получаем статус
+		const targetStatus = await this.appealStatusService.getStatusByValueOrFail(
+			fromStatus,
+		);
+
+		// получаем статус "отменено"
+		const newStatus = await this.appealStatusService.getStatusByValueOrFail(
+			toStatus,
+		);
+
+		// получаем все заявки с указанным целевым статусом
+		const targetAppeals = await this.appealsRepository.getAllByStatusId(
+			targetStatus.id,
+		);
+
+		if (!targetAppeals.length) {
+			throw new NotFoundError(
+				`Заявки со статусом "${targetStatus.value}" не найдены`,
+			);
+		}
+
+		// получаем массив id заявок
+		const appealIds = targetAppeals.map((appeal) => appeal.id);
+
+		// обновляем статусы заявок
+		await this.appealsRepository.updateStatuses(appealIds, newStatus);
+
+		// получаем обновленные заявки
+		const updatedAppeals = await this.appealsRepository.getAllByIds(appealIds);
+
+		// записываем заявки в историю с новым статусом и комментарием
+		await this.appealStatusHistoryService.saveManyAppealStatusHistory(
+			updatedAppeals,
+			newStatus,
+			comment,
+		);
+
+		// добавляем состояние последнего статуса с комментарием к заявкам
+		await this.mapAppealStatusLastHistory(updatedAppeals);
+
+		// преобразуем в DTO
+		const responseAppealsDto = plainToInstance(
+			ResponseAppealDto,
+			updatedAppeals,
+			{ excludeExtraneousValues: true },
+		);
+
+		return responseAppealsDto;
+	}
+
+	async mapAppealStatusLastHistory(appeals: AppealEntity[]) {
 		for (const appeal of appeals) {
 			const lastHistory =
 				await this.appealStatusHistoryService.getLatestHistory(appeal.id);

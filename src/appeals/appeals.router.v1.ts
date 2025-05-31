@@ -41,33 +41,41 @@ export class AppealsRouterV1 {
 		this.router.post(path, validateBodyDto, handlerCreateAppeal);
 	}
 
-	takeToWork() {
+	takeToWorkById() {
 		const path = this.buildPath('/:id/status/take');
-		const handlerTakeToWork = this.appealsController.inWork;
+		const handlerTakeToWork = this.appealsController.inWorkById;
 
 		this.router.post(path, handlerTakeToWork);
 	}
 
-	endAppeal() {
+	endAppealById() {
 		const path = this.buildPath('/:id/status/complete');
-		const handlerEndEppeal = this.appealsController.endAppeal;
+		const handlerEndEppeal = this.appealsController.endAppealById;
 
 		this.router.post(path, handlerEndEppeal);
 	}
 
-	cancelAppeal() {
+	cancelAppealById() {
 		const path = this.buildPath('/:id/status/cancel');
-		const handlerCancelAppeal = this.appealsController.cancelAppeal;
+		const handlerCancelAppeal = this.appealsController.cancelAppealById;
 
 		this.router.post(path, handlerCancelAppeal);
+	}
+
+	cancelAppealsInWork() {
+		const path = this.buildPath('/cancel-in-work');
+		const handlerCancelAppealActive = this.appealsController.cancelAppealsInWork;
+
+		this.router.post(path, handlerCancelAppealActive);
 	}
 
 	private init() {
 		this.getAllAppealsWithDateFilter();
 		this.createAppeal();
-		this.takeToWork();
-		this.endAppeal();
-		this.cancelAppeal();
+		this.takeToWorkById();
+		this.endAppealById();
+		this.cancelAppealById();
+		this.cancelAppealsInWork();
 	}
 
 	get getRouter() {

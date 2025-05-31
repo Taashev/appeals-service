@@ -40,12 +40,12 @@ export class AppealsController {
 		}
 	};
 
-	inWork = async (req: Request, res: Response, next: NextFunction) => {
+	inWorkById = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const appealId = req.params.id;
 			const comment = req.body.comment;
 
-			const responseAppealDto = await this.appealsService.updateStatus(
+			const responseAppealDto = await this.appealsService.updateStatusById(
 				appealId,
 				APPEAL_STATUSES.IN_WORK,
 				comment,
@@ -57,12 +57,12 @@ export class AppealsController {
 		}
 	};
 
-	endAppeal = async (req: Request, res: Response, next: NextFunction) => {
+	endAppealById = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const appealId = req.params.id;
 			const comment = req.body.comment;
 
-			const responseAppealDto = await this.appealsService.updateStatus(
+			const responseAppealDto = await this.appealsService.updateStatusById(
 				appealId,
 				APPEAL_STATUSES.COMPLETED,
 				comment,
@@ -74,13 +74,37 @@ export class AppealsController {
 		}
 	};
 
-	cancelAppeal = async (req: Request, res: Response, next: NextFunction) => {
+	cancelAppealById = async (
+		req: Request,
+		res: Response,
+		next: NextFunction,
+	) => {
 		try {
 			const appealId = req.params.id;
 			const comment = req.body.comment;
 
-			const responseAppealDto = await this.appealsService.updateStatus(
+			const responseAppealDto = await this.appealsService.updateStatusById(
 				appealId,
+				APPEAL_STATUSES.CANCEL,
+				comment,
+			);
+
+			res.send(responseAppealDto);
+		} catch (error) {
+			next(error);
+		}
+	};
+
+	cancelAppealsInWork = async (
+		req: Request,
+		res: Response,
+		next: NextFunction,
+	) => {
+		try {
+			const comment = req.body.comment;
+
+			const responseAppealDto = await this.appealsService.updateStatusByStatus(
+				APPEAL_STATUSES.IN_WORK,
 				APPEAL_STATUSES.CANCEL,
 				comment,
 			);

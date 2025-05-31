@@ -10,37 +10,6 @@ import { APPEAL_STATUSES } from './enums/statuses';
 export class AppealStatusService {
 	constructor(private appealStatusRepository: AppealStatusRepository) {}
 
-	async getStatusNewOrFail() {
-		const defaultStatus = await this.appealStatusRepository.getStatusNew();
-
-		if (!defaultStatus) {
-			throw new StatusNotConfiguredError(APPEAL_STATUSES.NEW);
-		}
-
-		return defaultStatus;
-	}
-
-	async getStatusWorkOrFail() {
-		const workStatus = await this.appealStatusRepository.getStatusWork();
-
-		if (!workStatus) {
-			throw new StatusNotConfiguredError(APPEAL_STATUSES.IN_WORK);
-		}
-
-		return workStatus;
-	}
-
-	async getStatusCompletedOrFail() {
-		const completedStatus =
-			await this.appealStatusRepository.getStatusCompleted();
-
-		if (!completedStatus) {
-			throw new StatusNotConfiguredError(APPEAL_STATUSES.COMPLETED);
-		}
-
-		return completedStatus;
-	}
-
 	async getStatusByValueOrFail(status: APPEAL_STATUSES) {
 		const statusEntity = await this.appealStatusRepository.getStatusByValue(
 			status,
