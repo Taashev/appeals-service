@@ -5,7 +5,7 @@ import { AppConfig } from './types/app.config.types';
 
 import { validationZodSchemaOrFail } from '../utils/validation.schema';
 
-const envPath = ['env.development', 'env.testing', 'env.production', '.env'];
+const envPath = ['env.development', 'env.test', 'env.production', '.env', '.env.example'];
 
 dotenv.config({ path: envPath });
 
