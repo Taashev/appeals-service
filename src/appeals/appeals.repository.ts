@@ -1,9 +1,9 @@
-import { In, Repository } from 'typeorm';
+import { FindManyOptions, In, Repository } from 'typeorm';
 
 import { AppealEntity } from './entities/appeal.entity';
 import { CreateAppealDto } from './dto/create-appeal.dto';
 import { AppealStatusEntity } from '../appeal-status/entities/appeal-status.entity';
-import { QueryDateFilter, QueryDateRangeFilter } from './types/types';
+import { QueryParamsDateFilter } from './types/types';
 
 export class AppealsRepository {
 	constructor(private appealsRepository: Repository<AppealEntity>) {}
@@ -12,32 +12,34 @@ export class AppealsRepository {
 		return this.appealsRepository.create(createAppealDto);
 	}
 
-	async save(createAppealDto: CreateAppealDto) {
-		return await this.appealsRepository.save(createAppealDto);
+	async save(appealEntity: AppealEntity) {
+		return await this.appealsRepository.save(appealEntity);
 	}
 
-	async updateStatuses(ids: string[], newStatus: AppealStatusEntity) {
+	async updateStatuses(
+		ids: AppealEntity['id'][],
+		newStatus: AppealStatusEntity,
+	) {
 		return await this.appealsRepository.update(ids, { status: newStatus });
 	}
 
-	async getById(id: string) {
+	async getById(id: AppealEntity['id']) {
 		return await this.appealsRepository.findOne({
 			where: { id },
 			relations: { status: true },
 		});
 	}
 
-	async getAll() {
-		return await this.appealsRepository.find({
+	async getAll(ids?: AppealEntity['id'][]) {
+		const findOptions: FindManyOptions<AppealEntity> = {
 			relations: { status: true },
-		});
-	}
+		};
 
-	async getAllByIds(ids: string[]) {
-		return await this.appealsRepository.find({
-			where: { id: In(ids) },
-			relations: { status: true },
-		});
+		if (ids !== undefined) {
+			findOptions.where = { id: In(ids) };
+		}
+
+		return await this.appealsRepository.find(findOptions);
 	}
 
 	async getAllByStatusId(statusId: number) {
@@ -47,25 +49,23 @@ export class AppealsRepository {
 		});
 	}
 
-	async getAllWithDateFilter(date: QueryDateFilter) {
-		const queryBuilder = this.appealsRepository
-			.createQueryBuilder('appeal')
-			.leftJoinAndSelect('appeal.status', 'status')
-			.where('DATE(appeal.created_at) = :date', { date });
-
-		return await queryBuilder.getMany();
-	}
-
-	async getAllWithDateRangeFilter(dateRangeFilter: QueryDateRangeFilter) {
-		const { dateFrom, dateTo } = dateRangeFilter;
+	async getAllWithDateFilter(dateFilter: Partial<QueryParamsDateFilter>) {
+		const { range, date } = dateFilter;
 
 		const queryBuilder = this.appealsRepository
 			.createQueryBuilder('appeal')
-			.leftJoinAndSelect('appeal.status', 'status')
-			.where('DATE(appeal.created_at) BETWEEN :dateFrom AND :dateTo', {
-				dateFrom,
-				dateTo,
-			});
+			.leftJoinAndSelect('appeal.status', 'status');
+
+		if (range) {
+			queryBuilder.where(
+				'DATE(appeal.created_at) BETWEEN :dateFrom AND :dateTo',
+			);
+			queryBuilder.setParameter('dateFrom', range.dateFrom);
+			queryBuilder.setParameter('dateTo', range.dateTo);
+		} else if (date) {
+			queryBuilder.where('DATE(appeal.created_at) = :date');
+			queryBuilder.setParameter('date', date);
+		}
 
 		return await queryBuilder.getMany();
 	}

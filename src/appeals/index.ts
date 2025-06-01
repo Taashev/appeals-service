@@ -9,13 +9,17 @@ import { AppealEntity } from './entities/appeal.entity';
 import { appealStatusService } from '../appeal-status';
 import { validateDtoMiddleware } from '../middlewares/validate.dto';
 import { appealStatusHistoryService } from '../appeal-status-history';
+import { AppealManagerRepository } from './appeals.manager.repository';
 
 const appealRepository = new AppealsRepository(
 	AppDataSource.getRepository(AppealEntity),
 );
 
+const appealManagerRepository = new AppealManagerRepository(AppDataSource);
+
 const appealService = new AppealsService(
 	appealRepository,
+	appealManagerRepository,
 	appealStatusService,
 	appealStatusHistoryService,
 );
