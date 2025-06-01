@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
-import { DateFilter } from '../types/types';
+import { QueryParamsDateFilter } from '../types/types';
 
 export function validationQueryParamsDateFilter(
 	req: Request,
@@ -45,7 +45,7 @@ export function validationQueryParamsDateFilter(
 	const dateTo = data?.date_to as string;
 
 	// создаем объект даты
-	const dateFilter: DateFilter = {
+	const dateFilter: QueryParamsDateFilter = {
 		date,
 		range: null,
 	};

@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { AppealsService } from './appeals.service';
 import { CreateAppealDto } from './dto/create-appeal.dto';
 import { APPEAL_STATUSES } from '../appeal-status/enums/statuses';
-import { DateFilter } from './types/types';
+import { QueryParamsDateFilter } from './types/types';
 
 export class AppealsController {
 	constructor(private appealsService: AppealsService) {}
@@ -14,7 +14,7 @@ export class AppealsController {
 		next: NextFunction,
 	) => {
 		try {
-			const dateFilter: DateFilter = req.body.dateFilter;
+			const dateFilter: QueryParamsDateFilter = req.body.dateFilter;
 
 			const responseAppealsDto = await this.appealsService.getAllWithDateFilter(
 				dateFilter,
@@ -40,7 +40,7 @@ export class AppealsController {
 		}
 	};
 
-	inWorkById = async (req: Request, res: Response, next: NextFunction) => {
+	markInWork = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const appealId = req.params.id;
 			const comment = req.body.comment;
@@ -57,7 +57,7 @@ export class AppealsController {
 		}
 	};
 
-	endAppealById = async (req: Request, res: Response, next: NextFunction) => {
+	markCompleted = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const appealId = req.params.id;
 			const comment = req.body.comment;
@@ -74,11 +74,7 @@ export class AppealsController {
 		}
 	};
 
-	cancelAppealById = async (
-		req: Request,
-		res: Response,
-		next: NextFunction,
-	) => {
+	markCanceled = async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const appealId = req.params.id;
 			const comment = req.body.comment;
@@ -103,7 +99,7 @@ export class AppealsController {
 		try {
 			const comment = req.body.comment;
 
-			const responseAppealDto = await this.appealsService.updateStatusByStatus(
+			const responseAppealDto = await this.appealsService.updateAllWithStatus(
 				APPEAL_STATUSES.IN_WORK,
 				APPEAL_STATUSES.CANCEL,
 				comment,

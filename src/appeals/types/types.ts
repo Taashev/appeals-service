@@ -1,11 +1,11 @@
-export type QueryDateFilter = string;
+export type DateFilter = string;
 
-export type QueryDateRangeFilter = {
+export type RangeDateFilter = {
 	dateFrom: string;
 	dateTo: string;
 };
 
-export type DateFilter = {
-	date: QueryDateFilter;
-	range: QueryDateRangeFilter | null;
+export type QueryParamsDateFilter = {
+	date: DateFilter;
+	range: RangeDateFilter | null;
 };

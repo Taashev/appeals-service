@@ -43,21 +43,21 @@ export class AppealsRouterV1 {
 
 	takeToWorkById() {
 		const path = this.buildPath('/:id/status/take');
-		const handlerTakeToWork = this.appealsController.inWorkById;
+		const handlerTakeToWork = this.appealsController.markInWork;
 
 		this.router.post(path, handlerTakeToWork);
 	}
 
 	endAppealById() {
 		const path = this.buildPath('/:id/status/complete');
-		const handlerEndEppeal = this.appealsController.endAppealById;
+		const handlerEndEppeal = this.appealsController.markCompleted;
 
 		this.router.post(path, handlerEndEppeal);
 	}
 
 	cancelAppealById() {
 		const path = this.buildPath('/:id/status/cancel');
-		const handlerCancelAppeal = this.appealsController.cancelAppealById;
+		const handlerCancelAppeal = this.appealsController.markCanceled;
 
 		this.router.post(path, handlerCancelAppeal);
 	}

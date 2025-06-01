@@ -1,37 +1,19 @@
 import { AppealStatusEntity } from '../appeal-status/entities/appeal-status.entity';
 import { AppealEntity } from '../appeals/entities/appeal.entity';
 import { AppealStatusHistoryRepository } from './appeal-status-history.repository';
+import { AppealStatusHistoryEntity } from './entities/appeal_status_history.entity';
 
 export class AppealStatusHistoryService {
 	constructor(
 		private appealStatusHistoryRepository: AppealStatusHistoryRepository,
 	) {}
 
-	async saveOneAppealStatusHistory(
-		appealEntity: AppealEntity,
-		appealStatusEntity: AppealStatusEntity,
-		comment?: string,
-	) {
-		const buildItemHistory = this.appealStatusHistoryRepository.createOne(
-			appealEntity,
-			appealStatusEntity,
-		);
-
-		buildItemHistory.comment ??= comment;
-
-		const createdItemHistory = await this.appealStatusHistoryRepository.saveOne(
-			buildItemHistory,
-		);
-
-		return createdItemHistory;
-	}
-
-	async saveManyAppealStatusHistory(
+	async saveAppealStatusHistory(
 		appealEntities: AppealEntity[],
 		appealStatusEntity: AppealStatusEntity,
-		comment?: string,
+		comment?: AppealStatusHistoryEntity['comment'],
 	) {
-		const createdItemsHistory = this.appealStatusHistoryRepository.createMany(
+		const createdItemsHistory = this.appealStatusHistoryRepository.create(
 			appealEntities,
 			appealStatusEntity,
 		);
@@ -40,16 +22,32 @@ export class AppealStatusHistoryService {
 			item.comment ??= comment;
 		}
 
-		const savedItemsHistory = await this.appealStatusHistoryRepository.saveMany(
+		const savedItemsHistory = await this.appealStatusHistoryRepository.save(
 			createdItemsHistory,
 		);
 
 		return savedItemsHistory;
 	}
 
-	async getLatestHistory(appealId: string) {
-		return await this.appealStatusHistoryRepository.getLastHistoryByAppealId(
-			appealId,
-		);
+	async mapAppealStatusLastHistory(appeals: AppealEntity[]) {
+		const appealsWithLastHistory: AppealEntity[] = [];
+
+		for (const appeal of appeals) {
+			const lastHistory =
+				await this.appealStatusHistoryRepository.getLastHistoryByAppealId(
+					appeal.id,
+				);
+
+			if (lastHistory) {
+				const appealWithLastHistory: AppealEntity = {
+					...appeal,
+					lastStatusHistory: lastHistory,
+				};
+
+				appealsWithLastHistory.push(appealWithLastHistory);
+			}
+		}
+
+		return appealsWithLastHistory;
 	}
 }
