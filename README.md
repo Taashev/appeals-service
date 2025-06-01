@@ -72,3 +72,32 @@ cd appeal-service
    ```
 
 ---
+
+## Эндпоинты API v1
+
+- **GET /api/v1/appeals** — Получить список всех обращений с возможностью фильтрации по дате в query параметрах.
+  - params:
+    - date=2025-25-25 за конкрутную дату
+    - date_from=2025-25-25 начала периода, date_to=2025-25-25 конец периода, не может быть меньше нечала и имеет приоритет над date|
+- **POST /api/v1/appeals** — создаёт новое обращение.
+  - body:
+    - theme: string
+    - message: string
+- **POST /api/v1/appeals/:id/status/take** — переводит обращение в статус "В работе" по id.
+  - params:
+    - id: uuid
+  - body:
+    - comment: string
+- **POST /api/v1/appeals/:id/status/complete** — завершает обращение по id, принимает комментарий.
+  - params:
+    - id: uuid
+  - body:
+    - comment: string
+- **POST /api/v1/appeals/:id/status/cancel** — отменяет обращение по id, принимает комментарий.
+  - params:
+    - id: uuid
+  - body:
+    - comment: string
+- **POST /api/v1/appeals/cancel-in-work** — отменяет все обращения, находящиеся в статусе "В работе", принимает комментарий.
+  - body:
+    - comment: string
