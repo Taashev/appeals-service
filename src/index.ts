@@ -22,6 +22,7 @@ import { handleErrors } from './middlewares/handle-errors';
 
 	app.listen(port, host, () => {
 		if (nodeEnv !== 'production') {
+			console.log('Сервер запущен:')
 			console.table({
 				host,
 				port,

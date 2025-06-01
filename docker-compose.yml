@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  backend:
+    depends_on:
+      - postgres
+    container_name: appeal-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: appeal-service:latest
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
+      HOST: ${HOST}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - ${PORT}:3000
+    networks:
+      - app-net
+
+  postgres:
+    container_name: appeal-database
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - app-net
+
+volumes:
+  postgres:
+
+networks:
+  app-net:
+    driver: bridge
