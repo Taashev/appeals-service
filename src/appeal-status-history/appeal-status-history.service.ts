@@ -1,3 +1,4 @@
+import { EntityManager } from 'typeorm';
 import { AppealStatusEntity } from '../appeal-status/entities/appeal-status.entity';
 import { AppealEntity } from '../appeals/entities/appeal.entity';
 import { AppealStatusHistoryRepository } from './appeal-status-history.repository';
@@ -8,7 +9,7 @@ export class AppealStatusHistoryService {
 		private appealStatusHistoryRepository: AppealStatusHistoryRepository,
 	) {}
 
-	async saveAppealStatusHistory(
+	create(
 		appealEntities: AppealEntity[],
 		appealStatusEntity: AppealStatusEntity,
 		comment?: AppealStatusHistoryEntity['comment'],
@@ -22,11 +23,36 @@ export class AppealStatusHistoryService {
 			item.comment ??= comment;
 		}
 
-		const savedItemsHistory = await this.appealStatusHistoryRepository.save(
-			createdItemsHistory,
+		return createdItemsHistory;
+	}
+
+	async save(
+		appealEntities: AppealEntity[],
+		appealStatusEntity: AppealStatusEntity,
+		comment?: AppealStatusHistoryEntity['comment'],
+	) {
+		const createdItemsHistory = this.create(
+			appealEntities,
+			appealStatusEntity,
+			comment,
 		);
 
-		return savedItemsHistory;
+		return await this.appealStatusHistoryRepository.save(createdItemsHistory);
+	}
+
+	async saveWithManager(
+		manager: EntityManager,
+		appealEntities: AppealEntity[],
+		appealStatusEntity: AppealStatusEntity,
+		comment?: AppealStatusHistoryEntity['comment'],
+	) {
+		const createdItemsHistory = this.create(
+			appealEntities,
+			appealStatusEntity,
+			comment,
+		);
+
+		return await manager.save(AppealStatusHistoryEntity, createdItemsHistory);
 	}
 
 	async mapAppealStatusLastHistory(appeals: AppealEntity[]) {

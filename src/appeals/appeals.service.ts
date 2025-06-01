@@ -1,18 +1,21 @@
 import { plainToInstance } from 'class-transformer';
 
-import { AppealStatusHistoryService } from '../appeal-status-history/appeal-status-history.service';
-import { AppealStatusService } from '../appeal-status/appeal-status.service';
 import { NotFoundError } from '../errors/not-found.error';
-import { AppealsRepository } from './appeals.repository';
+import { APPEAL_STATUSES } from '../appeal-status/enums/statuses';
+import { AppealStatusService } from '../appeal-status/appeal-status.service';
+import { AppealStatusHistoryService } from '../appeal-status-history/appeal-status-history.service';
+
+import { QueryParamsDateFilter } from './types/types';
+import { AppealEntity } from './entities/appeal.entity';
 import { CreateAppealDto } from './dto/create-appeal.dto';
 import { ResponseAppealDto } from './dto/response-appeal.dto';
-import { APPEAL_STATUSES } from '../appeal-status/enums/statuses';
-import { AppealEntity } from './entities/appeal.entity';
-import { QueryParamsDateFilter } from './types/types';
+import { AppealsRepository } from './appeals.repository';
+import { AppealManagerRepository } from './appeals.manager.repository';
 
 export class AppealsService {
 	constructor(
 		private appealsRepository: AppealsRepository,
+		private appealManagerRepository: AppealManagerRepository,
 		private appealStatusService: AppealStatusService,
 		private appealStatusHistoryService: AppealStatusHistoryService,
 	) {}
@@ -46,28 +49,37 @@ export class AppealsService {
 
 	async createAppeal(createAppealDto: CreateAppealDto) {
 		// создаем обьект заявки
-		const buildAppeal = this.appealsRepository.create(createAppealDto);
+		const createdAppeal = this.appealsRepository.create(createAppealDto);
 
 		// получем статус заявкм "новое"
 		const defaultStatus = await this.appealStatusService.getStatusByValueOrFail(
 			APPEAL_STATUSES.NEW,
 		);
 
-		buildAppeal.status = defaultStatus;
+		// создаем новое обращение через транзацию
+		// если что то пойдет не так то обращение не будет записано в историю
+		const savedAppeal = await this.appealManagerRepository.transaction(
+			async (manager) => {
+				const savedAppeal = await this.appealManagerRepository.save(manager, {
+					...createdAppeal,
+					status: defaultStatus,
+				});
 
-		// сохроняем заявку в бд
-		const createdAppeal = await this.appealsRepository.save(buildAppeal);
+				await this.appealStatusHistoryService.saveWithManager(
+					manager,
+					[savedAppeal],
+					defaultStatus,
+				);
 
-		// записываем заявку в историю
-		await this.appealStatusHistoryService.saveAppealStatusHistory(
-			[createdAppeal],
-			defaultStatus,
+				return savedAppeal;
+			},
+			'Неудалось создать обращение. Попробуйте еще раз или обратитесь в поддержку.',
 		);
 
 		// добавляем историю последнего статуса в заявку
 		const appealsWithLastHistory =
 			await this.appealStatusHistoryService.mapAppealStatusLastHistory([
-				createdAppeal,
+				savedAppeal,
 			]);
 
 		// преобразуем в DTO
@@ -136,6 +148,10 @@ export class AppealsService {
 		return responseAppealsDto;
 	}
 
+	// получает список обращений которые нужно обновить
+	// вторым параметром статус на который нужно обновиться
+	// по желанию можно добавить комментарий к этим заявкам и валидацию между переходами статусов
+	// возвращает обращения с обновленными статусами и комментарием к статусу
 	private async applyStatusUpdate({
 		appeals,
 		toStatus,
@@ -165,17 +181,33 @@ export class AppealsService {
 		// получаем массив id заявок
 		const appealIds = appeals.map((appeal) => appeal.id);
 
-		// обновляем статусы заявок
-		await this.appealsRepository.updateStatuses(appealIds, newStatus);
+		// Обновляем статусы заявок и сохроняем в историю через транзакцию.
+		// В случае ошибки обновления заявки или сохранения историм операция полностью будет отменена.
+		const updatedAppeals = await this.appealManagerRepository.transaction(
+			async (manager) => {
+				// обновляем статусы заявок
+				await this.appealManagerRepository.updateStatuses(
+					manager,
+					appealIds,
+					newStatus,
+				);
 
-		// получаем обновленные заявки
-		const updatedAppeals = await this.appealsRepository.getAll(appealIds);
+				const updatedAppeals = await this.appealManagerRepository.getAll(
+					manager,
+					appealIds,
+				);
 
-		// записываем заявки в историю с новым статусом и комментарием
-		await this.appealStatusHistoryService.saveAppealStatusHistory(
-			updatedAppeals,
-			newStatus,
-			comment,
+				// записываем заявки в историю с новым статусом и комментарием
+				await this.appealStatusHistoryService.saveWithManager(
+					manager,
+					updatedAppeals,
+					newStatus,
+					comment,
+				);
+
+				return updatedAppeals;
+			},
+			'Неудалось обновить статус заявок. Попробуйте еще раз или обратитесь в поддержку.',
 		);
 
 		// добавляем состояние последнего статуса с комментарием к заявкам
